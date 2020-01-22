@@ -429,26 +429,26 @@ void CStdGL::PerformBlt(CBltData &rBltData, CTexRef *const pTex,
 	}
 
 	glBindVertexArray(VertexArray.VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VertexArray.VBO[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, VertexArray.VBO[VertexArray.Vertices]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(VertexArray.Vertices, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glEnableVertexAttribArray(VertexArray.Vertices);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VertexArray.VBO[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, VertexArray.VBO[VertexArray.TexCoords]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(VertexArray.TexCoords, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glEnableVertexAttribArray(VertexArray.TexCoords);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VertexArray.VBO[2]);
+	glBindBuffer(GL_ARRAY_BUFFER, VertexArray.VBO[VertexArray.Color]);
 	glBufferData(GL_ARRAY_BUFFER,sizeof(color), color, GL_STATIC_DRAW);
-	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
-	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(VertexArray.Color, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glEnableVertexAttribArray(VertexArray.Color);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-	glDisableVertexAttribArray(2);
+	glDisableVertexAttribArray(VertexArray.Vertices);
+	glDisableVertexAttribArray(VertexArray.TexCoords);
+	glDisableVertexAttribArray(VertexArray.Color);
 	glBindVertexArray(0);
 
 	shader.Deselect();
@@ -630,47 +630,71 @@ void CStdGL::BlitLandscape(CSurface *const sfcSource, CSurface *const sfcSource2
 
 					glBindVertexArray(VertexArray.VAO);
 
-					glBindBuffer(GL_ARRAY_BUFFER, VertexArray.VBO[0]);
+					glBindBuffer(GL_ARRAY_BUFFER, VertexArray.VBO[VertexArray.Vertices]);
 					glBufferData(GL_ARRAY_BUFFER, sizeof(ft), ft, GL_STATIC_DRAW);
 					glVertexAttribPointer(
-								0,
+								VertexArray.Vertices,
 								2,
 								GL_FLOAT,
 								GL_FALSE,
 								0,
 								nullptr
 								);
-					glEnableVertexAttribArray(0);
+					glEnableVertexAttribArray(VertexArray.Vertices);
 
-					glBindBuffer(GL_ARRAY_BUFFER, VertexArray.VBO[1]);
+					glBindBuffer(GL_ARRAY_BUFFER, VertexArray.VBO[VertexArray.TexCoords]);
 					glBufferData(GL_ARRAY_BUFFER, sizeof(tc), tc, GL_STATIC_DRAW);
 					glVertexAttribPointer(
-								1,
+								VertexArray.TexCoords,
 								2,
 								GL_FLOAT,
 								GL_FALSE,
 								0,
 								nullptr
 								);
-					glEnableVertexAttribArray(1);
+					glEnableVertexAttribArray(VertexArray.TexCoords);
 
-					glBindBuffer(GL_ARRAY_BUFFER, VertexArray.VBO[2]);
+					glBindBuffer(GL_ARRAY_BUFFER, VertexArray.VBO[VertexArray.Color]);
 					glBufferData(GL_ARRAY_BUFFER, sizeof(color), color, GL_STATIC_DRAW);
 					glVertexAttribPointer(
-								2,
+								VertexArray.Color,
 								4,
 								GL_FLOAT,
 								GL_FALSE,
 								0,
 								nullptr
 								);
-					glEnableVertexAttribArray(2);
+					glEnableVertexAttribArray(VertexArray.Color);
+
+					const int texSize = sfcLiquidAnimation->iTexSize;
+					const GLfloat lt[]
+					{
+						fTexBlt.left / texSize,  fTexBlt.top / texSize,
+						fTexBlt.right / texSize, fTexBlt.top / texSize,
+						fTexBlt.left / texSize,  fTexBlt.bottom / texSize,
+						fTexBlt.right / texSize, fTexBlt.bottom / texSize
+					};
+
+					if (DDrawCfg.ColorAnimation)
+					{
+
+						glBindBuffer(GL_ARRAY_BUFFER, VertexArray.VBO[VertexArray.LiquidTexCoords]);
+						glBufferData(GL_ARRAY_BUFFER, sizeof(lt), lt, GL_STATIC_DRAW);
+						glVertexAttribPointer(VertexArray.LiquidTexCoords, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+						glEnableVertexAttribArray(VertexArray.LiquidTexCoords);
+					}
 
 					glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-					glDisableVertexAttribArray(0);
-					glDisableVertexAttribArray(1);
-					glDisableVertexAttribArray(2);
+					glDisableVertexAttribArray(VertexArray.Vertices);
+					glDisableVertexAttribArray(VertexArray.TexCoords);
+					glDisableVertexAttribArray(VertexArray.Color);
+
+					if (DDrawCfg.ColorAnimation)
+					{
+						glDisableVertexAttribArray(VertexArray.LiquidTexCoords);
+					}
+
 					glBindVertexArray(0);
 				}
 			}
@@ -859,12 +883,12 @@ bool CStdGL::RestoreDeviceObjects()
 	if (!BlitShader)
 	{
 		assert(!LandscapeShader);
-		//glEnable(GL_DEBUG_OUTPUT);
 		glDebugMessageCallback(MessageCallback, nullptr);
 
 		CStdGLVertexShader vertexShader{
 					R"(
-					#version 330 core
+					#version 150 core
+					#extension GL_ARB_explicit_attrib_location : enable
 
 					uniform float texIndent;
 					uniform float blitOffset;
@@ -872,12 +896,21 @@ bool CStdGL::RestoreDeviceObjects()
 					uniform mat4 modelViewMatrix;
 					uniform mat4 projectionMatrix;
 
+					// standard
 					layout (location = 0) in vec2 vertexCoord;
 					layout (location = 1) in vec2 texCoord;
 					layout (location = 2) in vec4 vertexColor;
 
+					// color animation
+					#ifdef LC_COLOR_ANIMATION
+					layout (location = 3) in vec2 liquidTexCoord;
+					#endif
+
 					out vec2 vPosition;
 					out vec2 vTexCoord;
+					#ifdef LC_COLOR_ANIMATION
+					out vec2 vLiquidTexCoord;
+					#endif
 					out vec4 vFragColor;
 
 					void main()
@@ -895,6 +928,9 @@ bool CStdGL::RestoreDeviceObjects()
 						);*/
 
 						vTexCoord = (textureMatrix * vec4(texCoord + texIndent, 0.0, 1.0)).xy;
+					#ifdef LC_COLOR_ANIMATION
+						vLiquidTexCoord = liquidTexCoord + texIndent;
+					#endif
 						vPosition = vertexCoord + blitOffset;
 						vFragColor = vertexColor;
 						gl_Position = projectionMatrix * modelViewMatrix * vec4(vPosition, 0.0, 1.0);
@@ -906,7 +942,8 @@ bool CStdGL::RestoreDeviceObjects()
 
 		CStdGLFragmentShader blitFragmentShader{
 			R"(
-			#version 330 core
+			#version 150 core
+			#extension GL_ARB_explicit_attrib_location : enable
 
 			uniform sampler2D textureSampler;
 
@@ -945,13 +982,16 @@ bool CStdGL::RestoreDeviceObjects()
 
 		CStdGLFragmentShader landscapeFragmentShader{
 					R"(
-					#version 330 core
+					#version 150 core
+					#extension GL_ARB_explicit_attrib_location : enable
 
 					uniform sampler2D textureSampler;
 					#ifdef LC_COLOR_ANIMATION
 					uniform sampler2D maskSampler;
 					uniform sampler2D liquidSampler;
 					uniform vec4 modulation;
+
+					in vec2 vLiquidTexCoord;
 					#endif
 
 					in vec2 vPosition;
@@ -964,7 +1004,7 @@ bool CStdGL::RestoreDeviceObjects()
 						fragColor = texture(textureSampler, vTexCoord);
 					#ifdef LC_COLOR_ANIMATION
 						float mask = texture(maskSampler, vTexCoord).a;
-						vec3 liquid = texture(liquidSampler, vTexCoord).rgb;
+						vec3 liquid = texture(liquidSampler, vLiquidTexCoord).rgb;
 
 						liquid -= vec3(0.5, 0.5, 0.5);
 						liquid = vec3(dot(liquid, modulation.rgb));
@@ -979,6 +1019,8 @@ bool CStdGL::RestoreDeviceObjects()
 
 		if (DDrawCfg.ColorAnimation)
 		{
+			vertexShader.SetMacro("LC_COLOR_ANIMATION", "1");
+			vertexShader.Compile();
 			landscapeFragmentShader.SetMacro("LC_COLOR_ANIMATION", "1");
 		}
 		landscapeFragmentShader.Compile();
@@ -988,7 +1030,7 @@ bool CStdGL::RestoreDeviceObjects()
 		LandscapeShader.Link();
 
 		glGenVertexArrays(1, &VertexArray.VAO);
-		glGenBuffers(3, VertexArray.VBO);
+		glGenBuffers(std::size(VertexArray.VBO), VertexArray.VBO);
 	}
 	// done
 	return Active;
