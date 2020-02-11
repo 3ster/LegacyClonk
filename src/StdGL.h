@@ -229,6 +229,7 @@ protected:
 	CStdGLShaderProgram BlitShader;
 	CStdGLShaderProgram BlitShaderMod2;
 	CStdGLShaderProgram LandscapeShader;
+	CStdGLShaderProgram DummyShader;
 
 	struct
 	{
@@ -236,6 +237,7 @@ protected:
 		{
 			Vertices = 0,
 			TexCoords = 1,
+			PrimitiveColor = 2,
 			Color = 2,
 			LiquidTexCoords = 3,
 		};
@@ -243,6 +245,7 @@ protected:
 		{
 			PerformBlt = 0,
 			BlitLandscape,
+			DrawPrimitive,
 			NumVAO
 		};
 		GLuint VAO[NumVAO];
