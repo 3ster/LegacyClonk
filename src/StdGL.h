@@ -245,6 +245,7 @@ protected:
 			PerformBlt = 0,
 			BlitLandscape,
 			DrawQuadDw,
+			DrawLineDw,
 			NumVAO
 		};
 		GLuint VAO[NumVAO];
