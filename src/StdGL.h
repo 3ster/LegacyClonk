@@ -240,7 +240,8 @@ protected:
 			Color = 2,
 			LiquidTexCoords = 3,
 		};
-		enum
+
+		enum ArrayIndex
 		{
 			PerformBlt = 0,
 			BlitLandscape,
@@ -335,6 +336,8 @@ protected:
 
 		(glEnableVertexAttribArray(args), ...);
 	}
+
+	void SelectVAO(decltype(VertexArray)::ArrayIndex index);
 
 #ifdef USE_X11
 	// Size of gamma ramps
