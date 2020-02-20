@@ -194,6 +194,7 @@ public:
 
 	bool Select(bool verbose = false); // select this context
 	void Deselect(); // select this context
+	void Destroy(); // destroy this context
 	bool UpdateSize(); // get new size from hWnd
 
 	bool PageFlip(); // present scene
