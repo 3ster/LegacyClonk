@@ -248,6 +248,7 @@ protected:
 			BlitLandscape,
 			DrawQuadDw,
 			DrawLineDw,
+			DrawPixInt,
 			NumVAO
 		};
 		GLuint VAO[NumVAO];
