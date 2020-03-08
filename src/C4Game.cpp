@@ -613,6 +613,22 @@ void C4Game::Clear()
 	// join reference
 	delete pJoinReference; pJoinReference = nullptr;
 
+	// shader
+	if (lpDDraw)
+	{
+		lpDDraw->ClearModeShaderPrograms();
+		for (const auto &shader : LoadedShader)
+		{
+			for (const auto *s : shader.second->GetPendingShaders())
+			{
+				delete s;
+			}
+		}
+	}
+
+	LoadedShader.clear();
+	ScriptShader.clear();
+
 	// okay, game cleared now. Remember log section
 	QuitLogPos = GetLogPos();
 
@@ -2173,6 +2189,7 @@ bool C4Game::ReloadFile(const char *szFile)
 
 bool C4Game::ReloadDef(C4ID id, uint32_t reloadWhat)
 {
+	reloadWhat &= ~C4D_Load_Shader; // FIXME: ugly hack
 	bool fSucc;
 	// not in network
 	if (Game.Network.isEnabled()) return false;
@@ -2321,6 +2338,9 @@ bool C4Game::InitGame(C4Group &hGroup, C4ScenarioSection *section, bool fLoadSky
 		// Colorize defs by material
 		Defs.ColorizeByMaterial(Material, GBM);
 		SetInitProgress(60);
+
+		LinkShaders();
+		SetInitProgress(61);
 	}
 
 	// determine startup player count
@@ -2545,6 +2565,31 @@ bool C4Game::LinkScriptEngine()
 	ScriptEngine.GlobalNamed.SetNameList(&ScriptEngine.GlobalNamedNames);
 
 	return true;
+}
+
+void C4Game::LinkShaders()
+{
+	size_t count = 0;
+	for (auto it = LoadedShader.begin(); it != LoadedShader.end(); )
+	{
+		auto i = LoadedShader.extract(it++);
+		std::vector<CStdShader *> shaders = i.mapped()->GetPendingShaders();
+
+		if (i.mapped()->Link())
+		{
+			ScriptShader.emplace(i.key(), std::move(i.mapped()));
+			++count;
+		}
+		else
+		{
+			// TODO: Warning
+		}
+
+		std::for_each(shaders.begin(), shaders.end(), std::default_delete<CStdShader>{});
+	}
+
+	LogF("%zu script shaders linked", count);
+	assert(LoadedShader.empty());
 }
 
 bool C4Game::InitPlayers()

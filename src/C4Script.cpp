@@ -6436,6 +6436,30 @@ static C4ValueArray *FnGetValues(C4AulContext *ctx, C4ValueHash *map)
 	return keys;
 }
 
+static bool FnSetShaderProgramForMode(C4AulContext *ctx, long mode, C4String *name)
+{
+	(void) ctx;
+
+#ifdef USE_CONSOLE
+	return false;
+#else
+
+	if (mode < 0 || mode >= static_cast<long>(CStdDDraw::DrawMode::Other))
+	{
+		return false;
+	}
+
+	if (auto it = Game.ScriptShader.find(FnStringPar(name)); it != Game.ScriptShader.end())
+	{
+		lpDDraw->SetShaderProgramForMode(static_cast<CStdDDraw::DrawMode>(mode), it->second.get());
+		return true;
+	}
+
+	return false;
+#endif
+}
+
+
 // C4Script Function Map
 
 // defined function class
@@ -6937,6 +6961,7 @@ void InitFunctionMap(C4AulScriptEngine *pEngine)
 	AddFunc(pEngine, "SetNextMission",                  FnSetNextMission);
 	AddFunc(pEngine, "GetKeys",                         FnGetKeys);
 	AddFunc(pEngine, "GetValues",                       FnGetValues);
+	AddFunc(pEngine, "SetShaderProgramForMode",         FnSetShaderProgramForMode);
 	new C4AulDefCastFunc(pEngine, "ScoreboardCol", C4V_C4ID, C4V_Int);
 	new C4AulDefCastFunc(pEngine, "CastInt",       C4V_Any,  C4V_Int);
 	new C4AulDefCastFunc(pEngine, "CastBool",      C4V_Any,  C4V_Bool);
