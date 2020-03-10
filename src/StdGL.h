@@ -185,6 +185,10 @@ protected:
 			TexCoords = 1,
 			Color = 2,
 			LiquidTexCoords = 3,
+			ModelViewMatrixCol0 = 4,
+			ModelViewMatrixCol1 = 5,
+			ModelViewMatrixCol2 = 6,
+			ModelViewMatrixCol3 = 7
 		};
 
 		enum ArrayIndex
@@ -206,22 +210,18 @@ protected:
 		{
 			TexIndent = 0,
 			BlitOffset,
-			TextureMatrix,
-			ModelViewMatrix,
 			ProjectionMatrix,
 		};
 
 		GLuint VBO;
-		const char * const Names[5]
+		const char * const Names[3]
 		{
 			"texIndent",
 			"blitOffset",
-			"textureMatrix",
-			"modelViewMatrix",
 			"projectionMatrix"
 		};
 
-		std::array<GLint, 5> Offset;
+		std::array<GLint, std::extent_v<decltype(Names)>> Offset;
 	} StandardUniforms;
 
 public:
