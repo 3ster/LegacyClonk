@@ -447,6 +447,8 @@ void CStdShader::Clear()
 	errorMessage.clear();
 }
 
+CStdShaderProgram *CStdShaderProgram::currentShaderProgram = nullptr;
+
 bool CStdShaderProgram::AddShader(CStdShader *shader)
 {
 	EnsureProgram();
@@ -469,6 +471,29 @@ void CStdShaderProgram::Clear()
 	shaders.clear();
 }
 
+void CStdShaderProgram::Select()
+{
+	if (currentShaderProgram != this)
+	{
+		OnSelect();
+		currentShaderProgram = this;
+	}
+}
+
+void CStdShaderProgram::Deselect()
+{
+	if (currentShaderProgram)
+	{
+		currentShaderProgram->OnDeselect();
+		currentShaderProgram = nullptr;
+	}
+}
+
+CStdShaderProgram *CStdShaderProgram::GetCurrentShaderProgram()
+{
+	return currentShaderProgram;
+}
+
 void CStdDDraw::Default()
 {
 	RenderTarget = nullptr;
@@ -478,7 +503,6 @@ void CStdDDraw::Default()
 	dwBlitMode = 0;
 	Gamma.Default();
 	DefRamp.Default();
-	currentShaderProgram = nullptr;
 	lpPrimary = lpBack = nullptr;
 	fUseClrModMap = false;
 }
@@ -493,7 +517,6 @@ void CStdDDraw::Clear()
 	{
 		modes.pop();
 	}
-	currentShaderProgram = nullptr;
 }
 
 bool CStdDDraw::WipeSurface(CSurface *sfcSurface)
@@ -1383,11 +1406,6 @@ void CStdDDraw::DrawModeChanged(DrawMode oldMode, DrawMode newMode)
 	{
 		assert(it->second);
 		it->second->Select();
-		currentShaderProgram = it->second;
-	}
-	else
-	{
-		currentShaderProgram = nullptr;
 	}
 }
 
@@ -1413,4 +1431,5 @@ void CStdDDraw::ClearModeShaderPrograms()
 {
 	// we don't delete the programs here, the caller has to take care of that
 	modeShaders.clear();
+	ShaderProgramsCleared();
 }
