@@ -17,6 +17,7 @@
 
 /* A wrapper class to OS dependent event and window interfaces, X11 version */
 
+#ifdef USE_GL
 #include <Standard.h>
 #include <StdWindow.h>
 #include <StdGL.h>
@@ -213,7 +214,6 @@ void CStdWindow::Clear()
 #ifdef USE_X11
 bool CStdWindow::FindFBConfig()
 {
-#ifndef USE_CONSOLE
 	// get an appropriate visual
 	// attributes for a single buffered visual in RGBA format with at least 4 bits per color
 	static int attrListSgl[]
@@ -247,12 +247,9 @@ bool CStdWindow::FindFBConfig()
 	if (!config)
 	{
 		XFree(config);
-#endif
 		Log("  gl: no visual at all.");
 		return false;
-#ifndef USE_CONSOLE
 	}
-#endif
 
 	struct {int framebuffer; int samples; } best{-1, -1};
 
@@ -385,3 +382,4 @@ void CStdWindow::SetDisplayMode(DisplayMode mode)
 	XSendEvent(dpy, DefaultRootWindow(dpy), false, SubstructureNotifyMask | SubstructureRedirectMask, &e);
 #endif
 }
+#endif
