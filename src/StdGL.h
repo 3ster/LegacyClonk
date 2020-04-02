@@ -18,6 +18,8 @@
 /* OpenGL implementation of NewGfx */
 
 #pragma once
+
+#include <Standard.h>
 #ifdef USE_GL
 
 #include <GL/glew.h>
@@ -138,9 +140,9 @@ public:
 	bool Select(bool verbose = false) override; // select this context
 	void Deselect(); // select this context
 	void Destroy(); // destroy this context
-	bool UpdateSize(); // get new size from hWnd
+	bool UpdateSize() override; // get new size from hWnd
 
-	bool PageFlip(); // present scene
+	bool PageFlip() override; // present scene
 
 protected:
 	bool CreateContext(int major, int minor, bool core = true);
